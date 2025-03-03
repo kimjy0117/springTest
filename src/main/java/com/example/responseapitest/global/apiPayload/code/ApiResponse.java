@@ -5,14 +5,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 @Builder
-public record ApiResponse(boolean success, String message, Object data) {
+public record ApiResponse(boolean isSuccess, String message, Object data) {
 
     public static ResponseEntity<ApiResponse> success(ResponseDTO responseDTO, Object data) {
         return ResponseEntity
                 .status(responseDTO.httpStatus())
                 .body(
                     ApiResponse.builder()
-                        .success(true)
+                        .isSuccess(true)
                         .message(responseDTO.message())
                         .data(data)
                         .build()
@@ -24,7 +24,7 @@ public record ApiResponse(boolean success, String message, Object data) {
                 .status(responseDTO.httpStatus())
                 .body(
                     ApiResponse.builder()
-                        .success(true)
+                        .isSuccess(true)
                         .message(responseDTO.message())
                         .data(null)
                         .build()
@@ -36,7 +36,7 @@ public record ApiResponse(boolean success, String message, Object data) {
                 .status(responseDTO.httpStatus())
                 .body(
                     ApiResponse.builder()
-                        .success(false)
+                        .isSuccess(false)
                         .message(responseDTO.message())
                         .data(null)
                         .build()
@@ -48,7 +48,7 @@ public record ApiResponse(boolean success, String message, Object data) {
                 .status(httpStatus)
                 .body(
                     ApiResponse.builder()
-                        .success(false)
+                        .isSuccess(false)
                         .message(message)
                         .data(null)
                         .build()

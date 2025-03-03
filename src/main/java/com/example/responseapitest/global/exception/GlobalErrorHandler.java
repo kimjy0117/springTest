@@ -2,6 +2,7 @@ package com.example.responseapitest.global.exception;
 
 import com.example.responseapitest.global.apiPayload.code.ApiResponse;
 import com.example.responseapitest.global.apiPayload.code.status.GlobalErrorStatus;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -60,7 +61,7 @@ public class GlobalErrorHandler {
 
     //500 나머지 에러
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse> handleNullPointerException(Exception e){
+    public ResponseEntity<ApiResponse> handleNullPointerException(Exception e, HttpServletRequest request){
         log.error("Exception Error", e);
         return ApiResponse.fail(GlobalErrorStatus._INTERNAL_SERVER_ERROR.getResponse());
     }
