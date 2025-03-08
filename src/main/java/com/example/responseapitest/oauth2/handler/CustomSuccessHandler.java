@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
@@ -27,11 +26,13 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
         //OAuth2User
+        //authentication.getPrincipal()로 로그인한 사용자의 OAuth2 정보를 가져옴
         CustomOAuth2User customUserDetail = (CustomOAuth2User) authentication.getPrincipal();
 
         System.out.println("customUserDetail = " + customUserDetail.getName());
         System.out.println("customUserDetail = " + customUserDetail.getUsername());
 
+        //authentication.getAuthorities()를 호출하여 사용자의 권한을 가져옴
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
         Iterator<? extends GrantedAuthority> iterator = authorities.iterator();
         GrantedAuthority auth = iterator.next();

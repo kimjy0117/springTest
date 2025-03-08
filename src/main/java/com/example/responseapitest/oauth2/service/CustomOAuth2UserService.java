@@ -30,7 +30,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         if(registrationId.equals("naver")){
             oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
-
         }
         else if(registrationId.equals("google")){
             oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
@@ -47,19 +46,20 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         UserEntity existData = userRepository.findByUsername(username);
 
         if(existData == null){
-            UserEntity userEntity = new UserEntity();
-            userEntity.setUsername(username);
-            userEntity.setEmail(oAuth2Response.getEmail());
-            userEntity.setName(oAuth2Response.getName());
-            userEntity.setRole("ROLE_USER");
+            UserEntity userEntity = UserEntity.builder()
+                    .username(username)
+                    .email(oAuth2Response.getEmail())
+                    .name(oAuth2Response.getName())
+                    .role("ROLE_USER")
+                    .build();
 
             userRepository.save(userEntity);
 
-            UserDTO userDTO = new UserDTO();
-            userDTO.setUsername(username);
-            userDTO.setName(oAuth2Response.getName());
-            userDTO.setRole("ROLE_USER");
-
+            UserDTO userDTO = UserDTO.builder()
+                    .username(username)
+                    .name(oAuth2Response.getName())
+                    .role("ROLE_USER")
+                    .build();
             return new CustomOAuth2User(userDTO);
         }
         else {
@@ -68,11 +68,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             userRepository.save(existData);
 
-            UserDTO userDTO = new UserDTO();
-            userDTO.setUsername(existData.getUsername());
-            userDTO.setName(oAuth2Response.getName());
-            userDTO.setRole(existData.getRole());
-
+            UserDTO userDTO = UserDTO.builder()
+                    .username(existData.getUsername())
+                    .name(existData.getName())
+                    .role(existData.getRole())
+                    .build();
             return new CustomOAuth2User(userDTO);
         }
     }
