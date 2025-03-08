@@ -22,9 +22,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
         System.out.println("oAuth2User = " + oAuth2User);
 
-        //서비스가 네이버에서 온 요청인지 구글에서 온 요청인지 확인하기 위한 아이디
+        //서비스가 어느 플랫폼에서 온 요청인지 확인하기 위한 아이디
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
         OAuth2Response oAuth2Response = null;
+
+        System.out.println("registrationId = " + registrationId);
 
         if(registrationId.equals("naver")){
             oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
@@ -32,6 +34,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         }
         else if(registrationId.equals("google")){
             oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
+        }
+        else if(registrationId.equals("kakao")){
+            oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
         }
         else {
             return null;
