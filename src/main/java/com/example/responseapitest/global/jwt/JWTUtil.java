@@ -18,24 +18,39 @@ public class JWTUtil {
     }
 
     public String getUsername(String token) {
-
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("username", String.class);
     }
 
     public String getRole(String token) {
-
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
     }
 
-    public Boolean isExpired(String token) {
+    public String getCategory(String token) {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("category", String.class);
+    }
 
+    public Boolean isExpired(String token) {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration().before(new Date());
     }
 
-    public String createJwt(String username, String role, Long expiredMs){
+    //액세스 토큰 생성
+    public String createAccessToken(String username, String name, String role, Long expiredMs){
         return Jwts.builder()
+                .claim("category", "access")
                 .claim("username", username)
+                .claim("name", name)
                 .claim("role", role)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + expiredMs))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    //리프레시 토큰 생성
+    public String createRefreshToken(String username, Long expiredMs){
+        return Jwts.builder()
+                .claim("category", "refresh")
+                .claim("username", username)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiredMs))
                 .signWith(secretKey)

@@ -1,5 +1,6 @@
 package com.example.responseapitest.oauth2.handler;
 
+import com.example.responseapitest.global.redis.RedisUtil;
 import com.example.responseapitest.oauth2.dto.CustomOAuth2User;
 import com.example.responseapitest.global.jwt.JWTUtil;
 import jakarta.servlet.ServletException;
@@ -18,9 +19,11 @@ import java.util.Iterator;
 @Component
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final JWTUtil jwtUtil;
+    private final RedisUtil redisUtil;
 
-    public CustomSuccessHandler(JWTUtil jwtUtil) {
+    public CustomSuccessHandler(JWTUtil jwtUtil, RedisUtil redisUtil) {
         this.jwtUtil = jwtUtil;
+        this.redisUtil = redisUtil;
     }
 
     @Override
@@ -38,9 +41,16 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         GrantedAuthority auth = iterator.next();
         String role = auth.getAuthority();
 
-        String token = jwtUtil.createJwt(customUserDetail.getUsername(), role, 60 * 60 * 60L);
+        //토큰 생성
+        String access = jwtUtil.createAccessToken(customUserDetail.getUsername(), customUserDetail.getName(), role, 1000 * 60 * 30L); //30분
+        String refresh = jwtUtil.createRefreshToken(customUserDetail.getUsername(), 1000 * 60 * 60 * 24 * 7L); //7일
 
-        response.addCookie(createCookie("Authorization", token));
+        //Redis에 리프레쉬 토큰 저장
+        addRefreshToken(customUserDetail.getUsername(), refresh, 1000 * 60 * 60 * 24 * 7L);
+
+        //응답 설정
+        response.addCookie(createCookie("Authorization", access));
+        response.addCookie(createCookie("refresh", refresh));
         response.sendRedirect("http://localhost:5173/");
     }
 
@@ -52,5 +62,10 @@ public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         cookie.setHttpOnly(true);
 
         return cookie;
+    }
+    
+    //Redis에 리프레쉬 토큰 저장
+    private void addRefreshToken(String username, String refresh, Long expiredMs){
+        redisUtil.setData(username, refresh, expiredMs);
     }
 }
