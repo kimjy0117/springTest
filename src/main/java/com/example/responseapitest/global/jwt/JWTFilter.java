@@ -1,5 +1,7 @@
 package com.example.responseapitest.global.jwt;
 
+import com.example.responseapitest.global.exception.BaseException;
+import com.example.responseapitest.global.jwt.exception.status.AuthErrorStatus;
 import com.example.responseapitest.oauth2.dto.CustomOAuth2User;
 import com.example.responseapitest.oauth2.dto.UserDTO;
 import jakarta.servlet.FilterChain;
@@ -48,8 +50,7 @@ public class JWTFilter extends OncePerRequestFilter {
         // 쿠키가 null인지 확인
         if (cookies == null) {
             log.info("cookies are empty");
-            filterChain.doFilter(request, response);
-            return;
+            throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
         }
 
         for (Cookie cookie : cookies) {
@@ -62,9 +63,7 @@ public class JWTFilter extends OncePerRequestFilter {
         //Authorization 토큰 검증
         if (authorization == null){
             log.info("토큰이 존재하지 않음");
-            filterChain.doFilter(request, response);
-            //조건의 해당되면 메소드 종료
-            return;
+            throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
         }
 
         //토큰
