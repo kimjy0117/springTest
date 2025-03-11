@@ -1,10 +1,14 @@
 package com.example.responseapitest.global.config;
 
+import com.example.responseapitest.global.jwt.exception.ExceptionHandlerFilter;
 import com.example.responseapitest.oauth2.handler.CustomSuccessHandler;
 import com.example.responseapitest.oauth2.service.CustomOAuth2UserService;
 import com.example.responseapitest.global.jwt.JWTFilter;
 import com.example.responseapitest.global.jwt.JWTUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,6 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -26,13 +31,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final CustomSuccessHandler customSuccessHandler;
     private final JWTUtil jwtUtil;
-
-
-    public SecurityConfig(CustomOAuth2UserService customOAuth2UserService, CustomSuccessHandler customSuccessHandler, JWTUtil jwtUtil) {
-        this.customOAuth2UserService = customOAuth2UserService;
-        this.customSuccessHandler = customSuccessHandler;
-        this.jwtUtil = jwtUtil;
-    }
+    private final ObjectMapper objectMapper;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
@@ -57,22 +56,27 @@ public class SecurityConfig {
                     }
                 }));
 
+        //경로별 인가 작업
+        http
+                .authorizeHttpRequests((auth) -> auth
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/api/auth/logout").permitAll()
+                        .requestMatchers("/api/token/reissue").permitAll()
+                        .anyRequest().authenticated());
         //csrf disable
         http
                 .csrf((auth) -> auth.disable());
-
         //Form 로그인 방식 disable
         http
                 .formLogin((auth) -> auth.disable());
-
         //HTTP Basic 인증 방식 disable
         http
                 .httpBasic((auth) -> auth.disable());
-
         //JWTFilter 추가 (무한 리다이렉션 방지)
         http
-                .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class);
-
+                .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new ExceptionHandlerFilter(objectMapper), JWTFilter.class);
         //oauth2
         http
                 .oauth2Login((oauth2) -> oauth2
@@ -80,16 +84,6 @@ public class SecurityConfig {
                                 .userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
                 );
-
-        //경로별 인가 작업
-        http
-                .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html").permitAll()
-                        .requestMatchers("/").permitAll()
-//                        .requestMatchers("/api/test/**").authenticated()
-                        .requestMatchers("/api/token/reissue").permitAll()
-                        .anyRequest().authenticated());
-
         //세션 설정 : STATELESS
         http
                 .sessionManagement((session) -> session
