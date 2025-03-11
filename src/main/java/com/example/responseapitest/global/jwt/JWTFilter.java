@@ -28,20 +28,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        //login이나 oauth2로 요청이 들어올 경우 넘김(무한 리다이렉션 방지)
-        String requestUri = request.getRequestURI();
-
-        if (requestUri.matches("^\\/login(?:\\/.*)?$")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-        if (requestUri.matches("^\\/oauth2(?:\\/.*)?$")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String authorization = null;
 
         System.out.println(Arrays.toString(request.getCookies()));
@@ -50,7 +36,7 @@ public class JWTFilter extends OncePerRequestFilter {
         // 쿠키가 null인지 확인
         if (cookies == null) {
             log.info("cookies are empty");
-            throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
+            throw new BaseException(AuthErrorStatus._EMPTY_ACCESS_TOKEN.getResponse());
         }
 
         for (Cookie cookie : cookies) {
@@ -63,7 +49,7 @@ public class JWTFilter extends OncePerRequestFilter {
         //Authorization 토큰 검증
         if (authorization == null){
             log.info("토큰이 존재하지 않음");
-            throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
+            throw new BaseException(AuthErrorStatus._EMPTY_ACCESS_TOKEN.getResponse());
         }
 
         //토큰
@@ -74,14 +60,13 @@ public class JWTFilter extends OncePerRequestFilter {
         
         if(!category.equals("access")){
             log.error("access토큰이 아님");
-            filterChain.doFilter(request, response);
+            throw new BaseException(AuthErrorStatus._INVALID_ACCESS_TOKEN.getResponse());
         }
 
-        // 토큰 검증 시 ExpiredJwtException 발생 가능 → try-catch로 잡기
+        // 토큰 검증 시 ExpiredJwtException 발생 가능
         if (jwtUtil.isExpired(token)) {
             log.info("토큰 만료됨");
-            filterChain.doFilter(request, response);
-            return;
+            throw new BaseException(AuthErrorStatus._EXPIRED_ACCESS_TOKEN.getResponse());
         }
 
         String username = jwtUtil.getUsername(token);

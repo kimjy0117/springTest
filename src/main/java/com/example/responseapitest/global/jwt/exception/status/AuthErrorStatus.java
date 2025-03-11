@@ -12,6 +12,7 @@ public enum AuthErrorStatus implements BaseResponse {
 
     _EMPTY_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "access 토큰이 존재하지 않습니다."),
     _INVALID_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "access 토큰 값이 잘못되었습니다."),
+    _EXPIRED_ACCESS_TOKEN(HttpStatus.UNAUTHORIZED, "access 토큰이 만료되었습니다."),
 
     _EMPTY_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "refresh 토큰이 존재하지 않습니다."),
     _EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "refresh 토큰이 만료되엇습니다."),
