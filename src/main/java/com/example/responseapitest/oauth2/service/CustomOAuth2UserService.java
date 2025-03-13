@@ -1,7 +1,9 @@
 package com.example.responseapitest.oauth2.service;
 
-import com.example.responseapitest.oauth2.entity.UserEntity;
-import com.example.responseapitest.oauth2.repository.UserRepository;
+import com.example.responseapitest.domain.user.Role;
+import com.example.responseapitest.domain.user.dto.UserDTO;
+import com.example.responseapitest.domain.user.entity.User;
+import com.example.responseapitest.domain.user.repository.UserRepository;
 import com.example.responseapitest.oauth2.dto.*;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
@@ -43,22 +45,22 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         //리소스 서버에서 발급 받은 정보로 사용자를 특정할 아이디값을 만듬
         String username = oAuth2Response.getProvider()+"_"+oAuth2Response.getProviderId();
-        UserEntity existData = userRepository.findByUsername(username);
+        User existData = userRepository.findByUsername(username);
 
         if(existData == null){
-            UserEntity userEntity = UserEntity.builder()
+            User user = User.builder()
                     .username(username)
                     .email(oAuth2Response.getEmail())
                     .name(oAuth2Response.getName())
-                    .role("ROLE_USER")
+                    .role(Role.USER)
                     .build();
 
-            userRepository.save(userEntity);
+            userRepository.save(user);
 
             UserDTO userDTO = UserDTO.builder()
                     .username(username)
                     .name(oAuth2Response.getName())
-                    .role("ROLE_USER")
+                    .role(Role.USER.getRoles())
                     .build();
             return new CustomOAuth2User(userDTO);
         }
@@ -71,7 +73,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             UserDTO userDTO = UserDTO.builder()
                     .username(existData.getUsername())
                     .name(existData.getName())
-                    .role(existData.getRole())
+                    .role(existData.getRole().getRoles())
                     .build();
             return new CustomOAuth2User(userDTO);
         }
