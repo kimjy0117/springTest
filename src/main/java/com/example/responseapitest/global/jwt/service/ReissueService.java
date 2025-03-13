@@ -1,21 +1,19 @@
 package com.example.responseapitest.global.jwt.service;
 
-import com.example.responseapitest.domain.test.exception.status.ErrorTestStatus;
+import com.example.responseapitest.domain.user.repository.UserRepository;
 import com.example.responseapitest.global.apiPayload.code.ApiResponse;
 import com.example.responseapitest.global.exception.BaseException;
 import com.example.responseapitest.global.jwt.JWTUtil;
 import com.example.responseapitest.global.jwt.exception.status.AuthErrorStatus;
 import com.example.responseapitest.global.jwt.exception.status.AuthSuccessStatus;
 import com.example.responseapitest.global.redis.RedisUtil;
-import com.example.responseapitest.oauth2.entity.UserEntity;
-import com.example.responseapitest.oauth2.repository.UserRepository;
+import com.example.responseapitest.domain.user.entity.User;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -81,7 +79,7 @@ public class ReissueService {
         }
 
         //username을 토대로 user정보 가져오기
-        UserEntity user = userRepository.findByUsername(username);
+        User user = userRepository.findByUsername(username);
 
         //사용자 정보가 존재하는지 확인
         if (user == null) {
@@ -90,7 +88,7 @@ public class ReissueService {
         }
 
         //JWT토큰 생성
-        String newAccessToken = jwtUtil.createAccessToken(user.getUsername(), user.getName(), user.getRole(), 1000 * 60 * 30L);//30분
+        String newAccessToken = jwtUtil.createAccessToken(user.getUsername(), user.getName(), user.getRole().getRoles(), 1000 * 60 * 30L);//30분
         String newRefreshToken = jwtUtil.createRefreshToken(user.getUsername(),1000 * 60 * 60 * 24 * 7L);//7일
 
         //redis에 기존 토큰 삭제 후 새 토큰 저장

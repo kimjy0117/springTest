@@ -13,15 +13,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.oauth2.client.web.OAuth2LoginAuthenticationFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @RequiredArgsConstructor
 @Configuration
@@ -33,9 +36,43 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final ObjectMapper objectMapper;
 
+    // ✅ 1. 정적 리소스 및 Swagger는 Security 필터에서 제외
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                new AntPathRequestMatcher("/v3/api-docs/**"),
+                new AntPathRequestMatcher("/swagger-ui/**"),
+                new AntPathRequestMatcher("/swagger-ui.html"),
+                new AntPathRequestMatcher("/swagger-resources/**"),
+                new AntPathRequestMatcher("/"),
+                new AntPathRequestMatcher("/api/auth/logout"),
+                new AntPathRequestMatcher("/login")
+//                new AntPathRequestMatcher("/api/test/role/all")
+        );
+    }
+
+//    // ✅ 2. CORS설정
+//    @Bean
+//    CorsConfigurationSource corsConfigurationSource() {
+//        CorsConfiguration config = new CorsConfiguration();
+//        config.setAllowedOrigins(List.of(
+//                "http://localhost:5173",
+//                "http://localhost:8080"
+//        ));
+//        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+//        config.setAllowedHeaders(List.of("*"));
+//        config.setExposedHeaders(List.of("Authorization"));
+//        config.setAllowCredentials(true);
+//
+//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+//        source.registerCorsConfiguration("/**", config);
+//        return source;
+//    }
+
+
+    // ✅ 3. API 보안 설정 (JWT, OAuth2 등)
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
-
         //cors 설정
         http
                 .cors(corsCustomizer -> corsCustomizer.configurationSource(new CorsConfigurationSource() {
@@ -59,33 +96,46 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui/index.html").permitAll()
-                        .requestMatchers("/").permitAll()
-                        .requestMatchers("/api/auth/logout").permitAll()
-                        .requestMatchers("/api/token/reissue").permitAll()
-                        .anyRequest().authenticated());
-        //csrf disable
-        http
-                .csrf((auth) -> auth.disable());
-        //Form 로그인 방식 disable
-        http
-                .formLogin((auth) -> auth.disable());
-        //HTTP Basic 인증 방식 disable
-        http
-                .httpBasic((auth) -> auth.disable());
+//                        .requestMatchers("/api/auth/logout").permitAll()
+//                        .requestMatchers("/api/token/reissue").permitAll()
+                        .requestMatchers("/api/test/role/admin").hasRole("ADMIN")
+                        .requestMatchers("/api/test/role/user").hasRole("USER")
+                        .requestMatchers("/api/test/role/guest").hasRole("GUEST")
+//                        .requestMatchers("/api/test/role/all").authenticated()
+                        .anyRequest().authenticated())
+
+                //login uri로 리디렉션 막기
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                            response.getWriter().write("{\"error\": \"Unauthorized\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+                            response.getWriter().write("{\"error\": \"Forbidden\"}");
+                        })
+                )
+
         //JWTFilter 추가 (무한 리다이렉션 방지)
-        http
                 .addFilterBefore(new JWTFilter(jwtUtil), UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new ExceptionHandlerFilter(objectMapper), JWTFilter.class);
+                .addFilterBefore(new ExceptionHandlerFilter(objectMapper), JWTFilter.class)
+
         //oauth2
-        http
                 .oauth2Login((oauth2) -> oauth2
                         .userInfoEndpoint((userInfoEndpointConfig) -> userInfoEndpointConfig
                                 .userService(customOAuth2UserService))
                         .successHandler(customSuccessHandler)
-                );
+                )
+
+        //csrf disable
+                .csrf((auth) -> auth.disable())
+        //Form 로그인 방식 disable
+                .formLogin((auth) -> auth.disable())
+        //HTTP Basic 인증 방식 disable
+                .httpBasic((auth) -> auth.disable())
         //세션 설정 : STATELESS
-        http
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 

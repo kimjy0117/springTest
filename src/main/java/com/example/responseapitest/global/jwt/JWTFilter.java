@@ -3,12 +3,13 @@ package com.example.responseapitest.global.jwt;
 import com.example.responseapitest.global.exception.BaseException;
 import com.example.responseapitest.global.jwt.exception.status.AuthErrorStatus;
 import com.example.responseapitest.oauth2.dto.CustomOAuth2User;
-import com.example.responseapitest.oauth2.dto.UserDTO;
+import com.example.responseapitest.domain.user.dto.UserDTO;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -19,29 +20,12 @@ import java.io.IOException;
 import java.util.Arrays;
 
 @Slf4j
+@RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
     private final JWTUtil jwtUtil;
 
-    public JWTFilter(JWTUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
-
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        //login이나 oauth2로 요청이 들어올 경우 넘김(무한 리다이렉션 방지)
-        String requestUri = request.getRequestURI();
-
-        if (requestUri.matches("^\\/login(?:\\/.*)?$")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-        if (requestUri.matches("^\\/oauth2(?:\\/.*)?$")) {
-
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String authorization = null;
 
         System.out.println(Arrays.toString(request.getCookies()));
@@ -50,7 +34,7 @@ public class JWTFilter extends OncePerRequestFilter {
         // 쿠키가 null인지 확인
         if (cookies == null) {
             log.info("cookies are empty");
-            throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
+            throw new BaseException(AuthErrorStatus._EMPTY_ACCESS_TOKEN.getResponse());
         }
 
         for (Cookie cookie : cookies) {
@@ -63,7 +47,7 @@ public class JWTFilter extends OncePerRequestFilter {
         //Authorization 토큰 검증
         if (authorization == null){
             log.info("토큰이 존재하지 않음");
-            throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
+            throw new BaseException(AuthErrorStatus._EMPTY_ACCESS_TOKEN.getResponse());
         }
 
         //토큰
@@ -74,14 +58,13 @@ public class JWTFilter extends OncePerRequestFilter {
         
         if(!category.equals("access")){
             log.error("access토큰이 아님");
-            filterChain.doFilter(request, response);
+            throw new BaseException(AuthErrorStatus._INVALID_ACCESS_TOKEN.getResponse());
         }
 
-        // 토큰 검증 시 ExpiredJwtException 발생 가능 → try-catch로 잡기
+        // 토큰 검증 시 ExpiredJwtException 발생 가능
         if (jwtUtil.isExpired(token)) {
             log.info("토큰 만료됨");
-            filterChain.doFilter(request, response);
-            return;
+            throw new BaseException(AuthErrorStatus._EXPIRED_ACCESS_TOKEN.getResponse());
         }
 
         String username = jwtUtil.getUsername(token);
@@ -94,7 +77,6 @@ public class JWTFilter extends OncePerRequestFilter {
 
         CustomOAuth2User customOAuth2User = new CustomOAuth2User(userDTO);
         Authentication authToken = new UsernamePasswordAuthenticationToken(customOAuth2User, null, customOAuth2User.getAuthorities());
-
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
         filterChain.doFilter(request, response);
