@@ -36,41 +36,7 @@ public class SecurityConfig {
     private final JWTUtil jwtUtil;
     private final ObjectMapper objectMapper;
 
-    // ✅ 1. 정적 리소스 및 Swagger는 Security 필터에서 제외
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return (web) -> web.ignoring().requestMatchers(
-                new AntPathRequestMatcher("/v3/api-docs/**"),
-                new AntPathRequestMatcher("/swagger-ui/**"),
-                new AntPathRequestMatcher("/swagger-ui.html"),
-                new AntPathRequestMatcher("/swagger-resources/**"),
-                new AntPathRequestMatcher("/"),
-                new AntPathRequestMatcher("/api/auth/logout"),
-                new AntPathRequestMatcher("/login")
-//                new AntPathRequestMatcher("/api/test/role/all")
-        );
-    }
-
-//    // ✅ 2. CORS설정
-//    @Bean
-//    CorsConfigurationSource corsConfigurationSource() {
-//        CorsConfiguration config = new CorsConfiguration();
-//        config.setAllowedOrigins(List.of(
-//                "http://localhost:5173",
-//                "http://localhost:8080"
-//        ));
-//        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-//        config.setAllowedHeaders(List.of("*"));
-//        config.setExposedHeaders(List.of("Authorization"));
-//        config.setAllowCredentials(true);
-//
-//        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-//        source.registerCorsConfiguration("/**", config);
-//        return source;
-//    }
-
-
-    // ✅ 3. API 보안 설정 (JWT, OAuth2 등)
+    // API 보안 설정 (JWT, OAuth2 등)
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         //cors 설정
@@ -96,12 +62,16 @@ public class SecurityConfig {
         //경로별 인가 작업
         http
                 .authorizeHttpRequests((auth) -> auth
-//                        .requestMatchers("/api/auth/logout").permitAll()
-//                        .requestMatchers("/api/token/reissue").permitAll()
+                        .requestMatchers("/").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/auth/logout").permitAll()
+                        .requestMatchers("/api/token/**").permitAll()
+                        .requestMatchers("/login").permitAll()
+
                         .requestMatchers("/api/test/role/admin").hasRole("ADMIN")
                         .requestMatchers("/api/test/role/user").hasRole("USER")
                         .requestMatchers("/api/test/role/guest").hasRole("GUEST")
-//                        .requestMatchers("/api/test/role/all").authenticated()
+
                         .anyRequest().authenticated())
 
                 //login uri로 리디렉션 막기
