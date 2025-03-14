@@ -39,7 +39,7 @@ public class ReissueService {
 
         //refresh토큰이 없다면 에러 메시지 반환
         if (refresh == null) {
-            log.error("refresh 토큰이 존재하지 않음");
+            log.info("refresh 토큰이 존재하지 않음");
             throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
         }
 
@@ -48,7 +48,7 @@ public class ReissueService {
         try {
             jwtUtil.isExpired(refresh);
         } catch (ExpiredJwtException e) {
-            log.error("refresh토큰 시간이 만료되었습니다.");
+            log.info("refresh토큰 시간이 만료되었습니다.");
             throw new BaseException(AuthErrorStatus._EXPIRED_REFRESH_TOKEN.getResponse());
         }
 
@@ -56,7 +56,7 @@ public class ReissueService {
         String category = jwtUtil.getCategory(refresh);
 
         if (!category.equals("refresh")) {
-            log.error("refresh토큰이 아닙니다.");
+            log.info("refresh토큰이 아닙니다.");
             throw new BaseException(AuthErrorStatus._INVALID_REFRESH_TOKEN.getResponse());
         }
 
@@ -68,13 +68,13 @@ public class ReissueService {
 
         //redis에 refresh토큰이 저장되어있는지 확인
         if (redisRefresh == null) {
-            log.error("DB에 refresh토큰이 존재하지 않습니다.");
+            log.info("DB에 refresh토큰이 존재하지 않습니다.");
             throw new BaseException(AuthErrorStatus._EMPTY_DB_REFRESH_TOKEN.getResponse());
         }
 
         //redis에 저장된 토큰과 클라이언트 측 refresh토큰이 같은지 확인
         if (!redisRefresh.equals(refresh)) {
-            log.error("DB에 저장된 refresh토큰과 클라이언트 측 refresh토큰이 일치하지 않습니다.");
+            log.info("DB에 저장된 refresh토큰과 클라이언트 측 refresh토큰이 일치하지 않습니다.");
             throw new BaseException(AuthErrorStatus._NOT_EQUAL_REFRESH_TOKEN.getResponse());
         }
 
@@ -83,7 +83,7 @@ public class ReissueService {
 
         //사용자 정보가 존재하는지 확인
         if (user == null) {
-            log.error("DB에 해당 사용자 정보가 존재하지 않습니다.");
+            log.info("DB에 해당 사용자 정보가 존재하지 않습니다.");
             throw new BaseException(AuthErrorStatus._EMPTY_DB_USER.getResponse());
         }
 
@@ -104,7 +104,7 @@ public class ReissueService {
 
     private Cookie createCookie(String key, String value) {
         Cookie cookie = new Cookie(key, value);
-        cookie.setMaxAge(60*60*60);
+        cookie.setMaxAge(60 * 60 * 24 * 7);
         //cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
