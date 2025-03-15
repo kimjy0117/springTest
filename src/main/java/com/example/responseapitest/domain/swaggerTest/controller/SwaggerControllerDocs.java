@@ -15,7 +15,7 @@ public interface SwaggerControllerDocs {
             @ApiResponse(responseCode = "200", description = "조회 성공"),
             @ApiResponse(responseCode = "400", description = "조회 실패")
     })
-    public ResponseEntity<com.example.responseapitest.global.apiPayload.code.ApiResponse> getPost(@RequestParam String name,
-                                                                                                  @RequestParam String nickname,
-                                                                                                  @RequestParam String birthday);
+    public ResponseEntity<?> getPost(@RequestParam String name,
+                                      @RequestParam String nickname,
+                                      @RequestParam String birthday);
 }

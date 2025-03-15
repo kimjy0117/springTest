@@ -21,7 +21,7 @@ public enum AuthErrorStatus implements BaseResponse {
     _EMPTY_DB_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "refresh 토큰이 DB에 존재하지 않습니다."),
     _NOT_EQUAL_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "DB에 저장된 refresh 토큰과 클라이언트 측 refresh 토큰이 일치하지 않습니다."),
 
-    _EMPTY_DB_USER(HttpStatus.BAD_REQUEST, "DB에 저장된 사용자 정보가 없습니다."),
+    _EMPTY_DB_USER(HttpStatus.UNAUTHORIZED, "DB에 저장된 사용자 정보가 없습니다."),
 
     _EMPTY_USER_INFORMATION(HttpStatus.UNAUTHORIZED, "사용자 정보를 불러올 수 없습니다."),
     ;

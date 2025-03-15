@@ -9,8 +9,9 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum UserSuccessStatus implements BaseResponse {
     _SUCCESS_TEST(HttpStatus.OK, "성공 테스트 확인"),
+    
     _SUCCESS_UPDATE_USER_ROLE(HttpStatus.OK, "유저 역할 업데이트 성공"),
-
+    _SUCCESS_GET_USER_INFORM(HttpStatus.OK, "유저 데이터 응답 성공"),
     ;
 
     private final HttpStatus httpStatus;

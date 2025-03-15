@@ -1,4 +1,4 @@
-package com.example.responseapitest.global.jwt;
+package com.example.responseapitest.global.jwt.util;
 
 import com.example.responseapitest.domain.user.entity.User;
 import com.example.responseapitest.domain.user.repository.UserRepository;
@@ -24,7 +24,15 @@ public class SecurityUtil {
 
         if (authentication.getPrincipal() instanceof CustomOAuth2User userDetails) {
             String userName = userDetails.getUsername(); // 사용자 식별 아이디 가져오기
-            return userRepository.findByUsername(userName);
+
+            User user = userRepository.findByUsername(userName);
+
+            //저장된 user가 없다면
+            if (user == null) {
+                throw new BaseException(AuthErrorStatus._EMPTY_DB_USER.getResponse());
+            }
+
+            return user;
         }
 
         throw new BaseException(AuthErrorStatus._EMPTY_USER_INFORMATION.getResponse());

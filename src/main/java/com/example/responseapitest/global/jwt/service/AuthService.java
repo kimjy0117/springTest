@@ -1,7 +1,7 @@
 package com.example.responseapitest.global.jwt.service;
 
 import com.example.responseapitest.global.apiPayload.code.ApiResponse;
-import com.example.responseapitest.global.jwt.JWTUtil;
+import com.example.responseapitest.global.jwt.util.JwtUtil;
 import com.example.responseapitest.global.jwt.exception.status.AuthSuccessStatus;
 import com.example.responseapitest.global.redis.RedisUtil;
 import jakarta.servlet.http.Cookie;
@@ -12,14 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import static org.springframework.web.util.WebUtils.getCookie;
-
 @Slf4j
 @AllArgsConstructor
 @Service
 public class AuthService {
     private final RedisUtil redisUtil;
-    private final JWTUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
     public ResponseEntity<ApiResponse> logout(HttpServletRequest request, HttpServletResponse response){
         // 1️⃣ 쿠키에서 Refresh Token 가져오기
