@@ -14,6 +14,7 @@ public class KakaoResponse implements OAuth2Response {
         this.properties = (Map<String, Object>) attributes.get("properties");
     }
 
+
     @Override
     public String getProvider() {
         return "kakao";
@@ -32,5 +33,10 @@ public class KakaoResponse implements OAuth2Response {
     @Override
     public String getName() {
         return properties != null ? (String) properties.get("nickname") : null;
+    }
+
+    @Override
+    public String getProfileImage() {
+        return properties != null ? (String) properties.get("profile_image") : null;
     }
 }

@@ -5,9 +5,8 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class UserDTO {
-    private String username;
+public class UserResDTO {
     private String name;
+    private String email;
     private String profileImage;
-    private String role;
 }

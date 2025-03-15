@@ -2,7 +2,7 @@ package com.example.responseapitest.oauth2.handler;
 
 import com.example.responseapitest.global.redis.RedisUtil;
 import com.example.responseapitest.oauth2.dto.CustomOAuth2User;
-import com.example.responseapitest.global.jwt.JWTUtil;
+import com.example.responseapitest.global.jwt.util.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +18,10 @@ import java.util.Iterator;
 
 @Component
 public class CustomSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
-    private final JWTUtil jwtUtil;
+    private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
 
-    public CustomSuccessHandler(JWTUtil jwtUtil, RedisUtil redisUtil) {
+    public CustomSuccessHandler(JwtUtil jwtUtil, RedisUtil redisUtil) {
         this.jwtUtil = jwtUtil;
         this.redisUtil = redisUtil;
     }

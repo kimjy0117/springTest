@@ -30,17 +30,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         System.out.println("registrationId = " + registrationId);
 
-        if(registrationId.equals("naver")){
-            oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
-        }
-        else if(registrationId.equals("google")){
-            oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
-        }
-        else if(registrationId.equals("kakao")){
-            oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
-        }
-        else {
-            return null;
+        switch (registrationId) {
+            case "naver" -> oAuth2Response = new NaverResponse(oAuth2User.getAttributes());
+            case "google" -> oAuth2Response = new GoogleResponse(oAuth2User.getAttributes());
+            case "kakao" -> oAuth2Response = new KakaoResponse(oAuth2User.getAttributes());
+            default -> {
+                return null;
+            }
         }
 
         //리소스 서버에서 발급 받은 정보로 사용자를 특정할 아이디값을 만듬
@@ -52,6 +48,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     .username(username)
                     .email(oAuth2Response.getEmail())
                     .name(oAuth2Response.getName())
+                    .profileImage(oAuth2Response.getProfileImage())
                     .role(Role.USER)
                     .build();
 
@@ -60,6 +57,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             UserDTO userDTO = UserDTO.builder()
                     .username(username)
                     .name(oAuth2Response.getName())
+                    .profileImage(oAuth2Response.getProfileImage())
                     .role(Role.USER.getRoles())
                     .build();
             return new CustomOAuth2User(userDTO);
@@ -67,12 +65,14 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         else {
             existData.setEmail(oAuth2Response.getEmail());
             existData.setName(oAuth2Response.getName());
+            existData.setProfileImage(oAuth2Response.getProfileImage());
 
             userRepository.save(existData);
 
             UserDTO userDTO = UserDTO.builder()
                     .username(existData.getUsername())
                     .name(existData.getName())
+                    .profileImage(existData.getProfileImage())
                     .role(existData.getRole().getRoles())
                     .build();
             return new CustomOAuth2User(userDTO);

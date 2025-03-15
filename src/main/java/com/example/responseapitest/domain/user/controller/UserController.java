@@ -17,4 +17,9 @@ public class UserController {
     public ResponseEntity<ApiResponse> updateRole(@RequestBody RoleDTO roleDTO) {
         return userService.updateUser(roleDTO.getRole());
     }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse> getUser() {
+        return userService.getUser();
+    }
 }

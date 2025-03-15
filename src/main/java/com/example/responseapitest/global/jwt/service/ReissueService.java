@@ -3,7 +3,7 @@ package com.example.responseapitest.global.jwt.service;
 import com.example.responseapitest.domain.user.repository.UserRepository;
 import com.example.responseapitest.global.apiPayload.code.ApiResponse;
 import com.example.responseapitest.global.exception.BaseException;
-import com.example.responseapitest.global.jwt.JWTUtil;
+import com.example.responseapitest.global.jwt.util.JwtUtil;
 import com.example.responseapitest.global.jwt.exception.status.AuthErrorStatus;
 import com.example.responseapitest.global.jwt.exception.status.AuthSuccessStatus;
 import com.example.responseapitest.global.redis.RedisUtil;
@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 public class ReissueService {
-    private final JWTUtil jwtUtil;
+    private final JwtUtil jwtUtil;
     private final RedisUtil redisUtil;
     private final UserRepository userRepository;
 
@@ -30,7 +30,12 @@ public class ReissueService {
         String refresh = null;
         Cookie[] cookies = request.getCookies();
 
-        //refresh 토큰 가져오기
+        //쿠키 유무 판별
+        if (cookies == null) {
+            log.info("쿠키가 존재하지 않음");
+            throw new BaseException(AuthErrorStatus._EMPTY_REFRESH_TOKEN.getResponse());
+        }
+
         for (Cookie cookie : cookies) {
             if (cookie.getName().equals("refresh")) {
                 refresh = cookie.getValue();
