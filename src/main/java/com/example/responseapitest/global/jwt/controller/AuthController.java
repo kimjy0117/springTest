@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
-public class AuthController {
+public class AuthController implements AuthControllerDocs{
     private final AuthService authService;
 
     @PostMapping("/logout")
