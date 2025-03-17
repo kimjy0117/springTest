@@ -1,6 +1,7 @@
 services:
   my-service:
     image: my-image
+    build: .
     environment:
       - JWT_SECRET=${JWT_SECRET}
 
