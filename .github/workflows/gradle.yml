@@ -58,7 +58,7 @@ jobs:
       - name: Build & Push Docker Images
         run: |
           docker compose build
-          docker tag my-service:latest ${{ secrets.DOCKER_USERNAME }}/spring-docker-test:latest
+          docker tag my-image:latest ${{ secrets.DOCKER_USERNAME }}/spring-docker-test:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/spring-docker-test:latest
 
   deploy:
