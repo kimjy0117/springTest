@@ -72,8 +72,8 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }} # EC2 퍼블릭 IPv4 DNS
           username: ${{ secrets.USERNAME }}   # 홈서버 SSH 계정 (ex: ubuntu)
-          #key: ${{ secrets.PRIVATE_KEY }}     # SSH 개인 키
-          password: ${{ secrets.PASSWORD }}     # SSH 비밀번호
+          key: ${{ secrets.PRIVATE_KEY }}     # SSH 개인 키
+#          password: ${{ secrets.PASSWORD }}     # SSH 비밀번호
           script: |
             sudo docker ps
             sudo docker rm -f $(docker ps -qa)
