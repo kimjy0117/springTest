@@ -11,22 +11,22 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestParam;
 
-@Tag(name = "리프레시 토큰", description = "토큰 API")
-public interface ReissueControllerDocs {
+@Tag(name = "로그인", description = "로그인 API")
+public interface AuthControllerDocs {
 
+    @Operation(summary = "로그아웃", description = "로그아웃 합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "토큰 재발급 성공",
+            @ApiResponse(responseCode = "200", description = "로그아웃 성공",
                     content = @Content(mediaType = "application/json",
                             examples = @ExampleObject(value = "{\n"
                                     + "    \"timestamp\": \"2024-10-22T21:35:03.755865\",\n"
                                     + "    \"isSuccess\": true,\n"
-                                    + "    \"message\": \"토큰 재발급 성공\",\n"
+                                    + "    \"message\": \"로그아웃 성공\",\n"
                                     + "    \"data\": null\n"
                                     + "}"),
                             schema = @Schema(implementation = SuccessResponse.class)))
     })
-    public ResponseEntity<?> reissue(HttpServletRequest request, HttpServletResponse response);
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response);
 
 }
