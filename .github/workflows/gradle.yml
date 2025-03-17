@@ -1,4 +1,4 @@
-name: Java CI with Gradle
+name: Build and Deploy
 
 on:
   push:
@@ -8,20 +8,22 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     permissions:
       contents: read
 
     steps:
+      # 1️⃣ Git 저장소 체크아웃
       - uses: actions/checkout@v3
+
+      # 2️⃣ JDK 17 설정
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-        ## gradle caching (빌드 시간 줄이기)
+      # 3️⃣ Gradle 캐싱 (빌드 시간 단축)
       - name: Gradle Caching
         uses: actions/cache@v3
         with:
@@ -32,51 +34,46 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-        # gradle chmod
+      # 4️⃣ Gradle 실행 권한 부여
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-
-        # gradle build
+      # 5️⃣ Gradle 빌드
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
-      # GitHub Secrets에서 Base64 인코딩된 .env 파일을 디코딩하여 .env 파일 생성
+      # 6️⃣ GitHub Secrets에서 Base64 인코딩된 .env 파일 디코딩하여 생성
       - name: Decode .env file
         run: |
-         echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > .env
+          echo "${{ secrets.ENV_FILE_BASE64 }}" | base64 --decode > .env
 
-      - name: Docker Compose Build
-        run: |
-          docker compose up -d --build
-
-        # docker login
+      # 7️⃣ Docker Hub 로그인
       - name: Docker Hub Login
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-        # docker build & push to production
-      - name: Docker build & push to prod
-        if: contains(github.ref, 'main')
+      # 8️⃣ Docker Compose 빌드 & 푸시 (이미지를 자동으로 빌드하고 Docker Hub에 푸시)
+      - name: Build & Push Docker Images
         run: |
-          docker build -f Dockerfile -t ${{ secrets.DOCKER_REPO }}/spring-docker-test .
-          docker push ${{ secrets.DOCKER_REPO }}/spring-docker-test
+          docker compose build
+          docker tag my-service:latest ${{ secrets.DOCKER_USERNAME }}/spring-docker-test:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/spring-docker-test:latest
 
-        ## deploy to production
-      - name: Deploy to prod
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      # 9️⃣ 서버에 배포
+      - name: Deploy to Server
         uses: appleboy/ssh-action@master
-        id: deploy-prod
-        if: contains(github.ref, 'main')
         with:
-          host: ${{ secrets.SERVER_IP }} # EC2 퍼블릭 IPv4 DNS
+          host: ${{ secrets.SERVER_IP }} # EC2 퍼블릭 IP
           username: ${{ secrets.USERNAME }}   # 홈서버 SSH 계정 (ex: ubuntu)
           key: ${{ secrets.PRIVATE_KEY }}     # SSH 개인 키
-#          password: ${{ secrets.PASSWORD }}     # SSH 비밀번호
           script: |
-            sudo docker ps
-            sudo docker rm -f $(docker ps -qa)
-            sudo docker pull ${{ secrets.DOCKER_REPO }}/spring-docker-test
-            sudo docker run -d -p 8080:8080 ${{ secrets.DOCKER_REPO }}/spring-docker-test
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/spring-docker-test:latest
+            sudo docker rm -f my-container || true
+            sudo docker run -d --name my-container -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/spring-docker-test:latest
             sudo docker image prune -f
